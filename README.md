@@ -8,7 +8,8 @@ The goal is to provide teachers with an "Early Warning System" to identify at-ri
 ## 🚀 Key Features
 * **Hybrid AI Engine:** Integrates numerical features with text-based feedback using **NLP (NLTK & TF-IDF)**.
 * **Multi-Model Comparison:** Evaluates Logistic Regression, Random Forest, Decision Trees, and SVM to select the most accurate predictor.
-* **Dual-Role Portal:** * **Teacher Dashboard:** Class-wide performance analytics, disciplinary trends, and automated "At-Risk" student alerts.
+* **Dual-Role Portal:**
+    * **Teacher Dashboard:** Class-wide performance analytics, disciplinary trends, and automated "At-Risk" student alerts.
     * **Student Dashboard:** Personal GPA tracking vs. class average, and real-time AI-generated grade predictions.
 * **Interactive Visualizations:** Powered by **Plotly**, featuring Gauge charts for performance standing and grouped histograms for course-wise analysis.
 * **Recommendation System:** An automated engine that provides personalized academic strategies (e.g., attendance warnings or tutoring suggestions) based on model output.
