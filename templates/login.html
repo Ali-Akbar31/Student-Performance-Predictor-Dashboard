@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); 
+            font-family: 'Poppins', sans-serif; 
+            color: #1e293b; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        /* Initial state for animation */
+        .login-card { 
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 50px; 
+            border-radius: 24px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15); 
+            width: 100%; 
+            max-width: 460px; 
+            border: 1px solid rgba(255,255,255,0.4);
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        /* State after animation triggers */
+        .login-card.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .form-control { 
+            border-radius: 12px; 
+            padding: 14px; 
+            background-color: rgba(255,255,255,0.7); 
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        .form-control:focus { 
+            background-color: rgba(255,255,255,1); 
+            border-color: #4f46e5; 
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); 
+        }
+
+        .btn-indigo { 
+            background-color: #4f46e5; 
+            color: white; 
+            padding: 16px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            transition: all 0.3s; 
+            letter-spacing: 0.5px;
+        }
+        .btn-indigo:hover { 
+            background-color: #3e36c7; 
+            color: white; 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(62, 54, 199, 0.2);
+        }
+
+        .helper-box { 
+            background: rgba(230, 235, 255, 0.5); 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-top: 30px; 
+            color: #3730a3; 
+            font-size: 0.85rem;
+            border: 1px solid rgba(55, 48, 163, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card" id="loginCard">
+        <div class="text-center mb-5">
+            <h1 class="fw-bold mb-2" style="color: #1e293b; letter-spacing: -1.5px;">Welcome</h1>
+            <p class="text-muted fs-6 mb-0">Student Performance and Predictor</p>
+        </div>
+        
+        {% if error %}
+            <div class="alert alert-danger p-2 text-center small rounded-3 fw-bold">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST" class="space-y-4">
+            <div class="mb-4">
+                <input type="text" name="username" class="form-control" placeholder="User ID" required>
+            </div>
+            <div class="mb-5">
+                <input type="password" name="password" class="form-control" placeholder="Passcode (12345/123)" required>
+            </div>
+            <button type="submit" class="btn btn-indigo w-100 border-0 text-uppercase">Access Portal Securely</button>
+        </form>
+
+        <div class="helper-box text-center">
+            <strong class="d-block mb-2 text-dark fs-6">Credential Help Box</strong>
+            <div class="d-flex justify-content-between px-2 mb-1">
+                <span><b class="text-dark">Faculty Login:</b></span> 
+                <span><b>faculty</b> / <b>12345</b></span>
+            </div>
+            <div class="d-flex flex-column text-start px-2 mt-2">
+                <span><b class="text-dark">Student Login:</b></span>
+                <span style="color: #4f46e5;">Use <b>ANY Student ID</b> from dataset with passcode <b>123</b>.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Trigger animation on window load
+        window.addEventListener('load', () => {
+            document.getElementById('loginCard').classList.add('active');
+        });
+    </script>
+</body>
+</html>

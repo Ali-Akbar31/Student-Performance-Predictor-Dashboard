@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Analytics Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Modern Background & Font */
+        body { 
+            background: linear-gradient(135deg, #f0f4ff 0%, #d9e2ff 100%); 
+            font-family: 'Poppins', sans-serif; 
+            color: #1e293b; 
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Header */
+        .header-bg { 
+            background: rgba(79, 70, 229, 0.85); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: white; 
+            padding: 25px 40px; 
+            border-radius: 0 0 30px 30px; 
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); 
+            margin-bottom: 40px; 
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Neumorphic / Glass Cards */
+        .card-custom { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(16px);
+            border-radius: 24px; 
+            padding: 30px; 
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card-custom:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            letter-spacing: 1.5px;
+            color: #64748b;
+        }
+
+        /* Dynamic Grade Colors Setup */
+        {% set grade_color = '#ef4444' if live_grade in ['Poor', 'Fail'] else ('#f59e0b' if live_grade == 'Average' else '#10b981') %}
+        
+        .grade-text {
+            font-size: 3rem;
+            background: linear-gradient(135deg, {{ grade_color }} 0%, #333 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .strategy-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 12px;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+        
+        .strategy-list li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            color: #4f46e5;
+            font-size: 1.2rem;
+        }
+
+        .btn-custom {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 50px;
+            padding: 8px 24px;
+            transition: all 0.3s;
+        }
+        .btn-custom:hover {
+            background: white;
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bg d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-0 fw-bold" style="letter-spacing: -0.5px;">Student Dashboard</h2>
+            <p class="mb-0 opacity-75" style="font-size: 0.9rem;">ID: <strong>{{ s.Student_ID }}</strong></p>
+        </div>
+        <a href="/logout" class="btn btn-custom fw-bold text-decoration-none">Secure Logout</a>
+    </div>
+
+    <div class="container-fluid px-5">
+        
+        <div class="row mb-4">
+            
+            <div class="col-md-4 mb-3">
+                <div class="card-custom h-100 d-flex flex-column justify-content-center text-center">
+                    <p class="card-title fw-bold mb-2 text-uppercase">AI Predicted Outcome</p>
+                    <h1 class="fw-bold mb-0 grade-text">{{ live_grade }}</h1>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="card-custom h-100 d-flex flex-column justify-content-center text-center">
+                    <p class="card-title fw-bold mb-3 text-uppercase">Counselor Remarks</p>
+                    {% if s.Teacher_Remarks and s.Teacher_Remarks|string != 'nan' %}
+                        <p class="mb-0 fst-italic" style="color: #334155; font-size: 1.05rem;">"{{ s.Teacher_Remarks }}"</p>
+                    {% else %}
+                        <p class="mb-0 fst-italic text-muted">"No specific remarks at this time."</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card-custom h-100">
+                    <p class="card-title fw-bold mb-3 text-uppercase text-center">Action Plan</p>
+                    <ul class="strategy-list mb-0" style="list-style-type: none;">
+                        {% for tip in strategies %}
+                            <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card-custom h-100 p-2 d-flex align-items-center justify-content-center">
+                    {% if graph_gauge %}
+                        <div id="gaugeChart" style="width: 100%; height: 350px;"></div>
+                    {% else %}
+                        <h5 class="text-muted">No data for gauge chart.</h5>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-8 mb-4">
+                <div class="card-custom h-100 p-2 d-flex align-items-center justify-content-center">
+                    {% if graph_bar %}
+                        <div id="barChart" style="width: 100%; height: 350px;"></div>
+                    {% else %}
+                        <h5 class="text-muted">No data for bar chart.</h5>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        {% if graph_gauge %}
+            var gaugeData = {{ graph_gauge | safe }};
+            
+            // Safe layout updates
+            if (!gaugeData.layout) gaugeData.layout = {};
+            
+            // ---- NAYI LINE YAHAN HAI ----
+            gaugeData.layout.title = null; // Yeh extra "Final Exam Standing" ko remove kar dega
+            // -----------------------------
+            
+            gaugeData.layout.paper_bgcolor = 'rgba(0,0,0,0)';
+            gaugeData.layout.font = { family: 'Poppins, sans-serif', color: '#475569' };
+            
+            // Dynamic color for gauge based on AI Prediction
+            if (gaugeData.data && gaugeData.data[0] && gaugeData.data[0].gauge) {
+                gaugeData.data[0].gauge.bar.color = '{{ grade_color }}';
+                gaugeData.data[0].gauge.bgcolor = 'rgba(0,0,0,0.05)';
+                gaugeData.data[0].gauge.borderwidth = 0;
+            }
+            
+            Plotly.newPlot('gaugeChart', gaugeData.data, gaugeData.layout, {displayModeBar: false, responsive: true});
+        {% endif %}
+
+        {% if graph_bar %}
+            var barData = {{ graph_bar | safe }};
+            
+            // Safe layout updates
+            if (!barData.layout) barData.layout = {};
+            barData.layout.paper_bgcolor = 'rgba(0,0,0,0)';
+            barData.layout.plot_bgcolor = 'rgba(0,0,0,0)';
+            barData.layout.font = { family: 'Poppins, sans-serif', color: '#475569' };
+            
+            // Clean up grid lines
+            if(barData.layout.yaxis) {
+                barData.layout.yaxis.showgrid = true;
+                barData.layout.yaxis.gridcolor = 'rgba(0,0,0,0.05)';
+            }
+            
+            Plotly.newPlot('barChart', barData.data, barData.layout, {displayModeBar: false, responsive: true});
+        {% endif %}
+    </script>
+</body>
+</html>

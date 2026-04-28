@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Analytics Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Body with hidden horizontal scroll to prevent breaking */
+        body { 
+            background: linear-gradient(135deg, #f0f4ff 0%, #d9e2ff 100%); 
+            font-family: 'Poppins', sans-serif; 
+            color: #1e293b; 
+            margin: 0;
+            overflow-x: hidden; 
+        }
+
+        /* Fixed Glassmorphism Sidebar */
+        .sidebar-glass { 
+            background: rgba(79, 70, 229, 0.85); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            width: 280px;
+            height: 100vh;
+            position: fixed; 
+            left: 0;
+            top: 0;
+            color: white; 
+            padding: 40px 30px; 
+            border-radius: 0 30px 30px 0; 
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05); 
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            z-index: 1000;
+        }
+
+        .sidebar-item {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-item:hover {
+            color: white;
+            background: rgba(255,255,255,0.15);
+        }
+        .sidebar-item.active {
+            color: white;
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Main Content Area properly aligned with Fixed Sidebar */
+        .main-container {
+            margin-left: 280px; 
+            padding: 40px 50px;
+            width: calc(100% - 280px);
+            min-height: 100vh;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Neumorphic / Glass Cards */
+        .card-custom { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(16px);
+            border-radius: 24px; 
+            padding: 30px; 
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            overflow: hidden; 
+        }
+        
+        .card-custom:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .kpi-title {
+            font-size: 0.85rem;
+            letter-spacing: 1.5px;
+            color: #64748b;
+        }
+
+        /* Scrollable Table Container styling */
+        .table-scroll-container {
+            max-height: 500px; /* Height set for scrollbar */
+            overflow-y: auto; /* Adds vertical scrollbar */
+            overflow-x: auto; /* Adds horizontal scrollbar if needed */
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(16px);
+        }
+        
+        .table-glass {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        
+        /* Sticky Header for Table */
+        .table-glass thead th {
+            background: rgba(79, 70, 229, 0.95);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding: 15px;
+            border: none;
+            white-space: nowrap;
+            position: sticky;
+            top: 0; /* Keeps header at top while scrolling */
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .table-glass tbody td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            color: #475569;
+            font-size: 0.9rem;
+        }
+        
+        .table-glass tbody tr:hover {
+            background: rgba(230, 235, 255, 0.5);
+        }
+
+        /* Custom Scrollbar for the table */
+        .table-scroll-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.02);
+            border-radius: 10px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.3);
+            border-radius: 10px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.6);
+        }
+
+        /* Fix for Plotly resizing */
+        .js-plotly-plot, .plot-container {
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-glass">
+        <div class="text-center mb-5 mt-2">
+        </div>
+        <nav class="flex-column mb-auto">
+            <a href="#" class="sidebar-item active mb-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
+                <span class="me-3 fs-5">📊</span> Dashboard Top
+            </a>
+            <a href="#charts-section" class="sidebar-item mb-3">
+                <span class="me-3 fs-5">📚</span> Chart Analysis
+            </a>
+            <a href="#alerts-section" class="sidebar-item mb-3">
+                <span class="me-3 fs-5">👩‍🎓</span> Manage Students
+            </a>
+        </nav>
+        <div class="mt-auto">
+            <a href="/logout" class="sidebar-item bg-danger text-center justify-content-center text-uppercase fw-bold p-3" style="color: white;">Secure Logout</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <div>
+                <h1 class="fw-bold mb-1" style="color: #1e293b; letter-spacing: -1px;">Teacher Dashboard</h1>
+                <p class="text-muted mb-0">Overview of student academic and behavioral standing.</p>
+            </div>
+            </div>
+        
+        <div class="row mb-5">
+            <div class="col-md-6 mb-3">
+                <div class="card-custom text-center">
+                    <p class="kpi-title fw-bold mb-2 text-uppercase">Total Dataset Records</p>
+                    <h1 class="fw-bold mb-0" style="color: #4f46e5; font-size: 4rem;">{{ kpis.total }}</h1>
+                    <p class="text-muted mb-0">Students analyzed</p>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card-custom text-center border-danger">
+                    <p class="kpi-title fw-bold mb-2 text-uppercase text-danger">Academic Alerts (Poor/Fail)</p>
+                    <h1 class="fw-bold mb-0 text-danger" style="font-size: 4rem;">{{ kpis.alerts }}</h1>
+                    <p class="text-muted mb-0">Students need immediate review</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="charts-section" class="row pt-2">
+            <div class="col-md-7 mb-4">
+                <div class="card-custom p-2 h-100 d-flex justify-content-center">
+                    <div id="graph1" style="width: 100%; height: 450px;"></div>
+                </div>
+            </div>
+            <div class="col-md-5 mb-4">
+                <div class="card-custom p-2 h-100 d-flex justify-content-center">
+                    <div id="graph2" style="width: 100%; height: 450px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="alerts-section" class="alert-container pt-4">
+            <div class="page-header mt-2 mb-3">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: #ef4444; letter-spacing: -0.5px;">Needs Academic Attention</h3>
+                    <p class="text-muted mb-0">Complete list of students at risk based on predicted grades.</p>
+                </div>
+            </div>
+            <div class="table-scroll-container">
+                {{ table | safe }}
+            </div>
+        </div>
+        
+        <br><br>
+    </div>
+
+    <script>
+        // Load graphs with responsive settings
+        var layoutUpdate = { autosize: true };
+        var config = { responsive: true, displayModeBar: false };
+        
+        {% if graph1 %}
+            var g1 = {{ graph1 | safe }};
+            Plotly.newPlot('graph1', g1.data, Object.assign({}, g1.layout, layoutUpdate), config);
+        {% endif %}
+        
+        {% if graph2 %}
+            var g2 = {{ graph2 | safe }};
+            Plotly.newPlot('graph2', g2.data, Object.assign({}, g2.layout, layoutUpdate), config);
+        {% endif %}
+
+        // Force resize event on load
+        window.addEventListener('load', function() {
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        // NAYA CODE: SIDEBAR ACTIVE STATE SHIFT KARNE KE LIYE
+        document.addEventListener("DOMContentLoaded", function() {
+            // Sidebar ke tamam items ko select karo
+            const sidebarLinks = document.querySelectorAll('.sidebar-glass .sidebar-item');
+
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Agar logout button par click kiya hai toh usko ignore karo
+                    if (this.getAttribute('href') === '/logout') return;
+
+                    // 1. Sab buttons se 'active' class hata do
+                    sidebarLinks.forEach(item => item.classList.remove('active'));
+
+                    // 2. Sirf usi button par 'active' class lagao jis par click hua hai
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
